@@ -10,7 +10,10 @@ readme = "README.md"
 requires-python = ">=3.14"
 license = { file = "LICENSE" }
 authors = [{ name = "Kyle Nakhul" }]
-dependencies = ["pydantic>=2.0", "PyYAML>=6.0"]
+dependencies = ["pydantic>=2.0", "PyYAML>=6.0", "rich>=13.0", "typer>=0.12"]
+
+[project.scripts]
+toolpolicy = "toolpolicy.cli:app"
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.12"]
