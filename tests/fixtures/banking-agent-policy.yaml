@@ -1,0 +1,38 @@
+version: "1"
+
+tools:
+  get_customer:
+    risk: read
+    decision: allow
+
+  get_account_balance:
+    risk: read
+    decision: allow
+    constraints:
+      - source: context
+        field: customer_verified
+        operator: equals
+        value: true
+        on_failure: deny
+
+  update_address:
+    risk: write
+    decision: require_approval
+
+  freeze_card:
+    risk: consequential
+    decision: require_approval
+
+  transfer_funds:
+    risk: consequential
+    decision: require_approval
+    constraints:
+      - source: arguments
+        field: amount
+        operator: less_than_or_equal
+        value: 5000
+        on_failure: deny
+
+  close_account:
+    risk: destructive
+    decision: deny
