@@ -15,6 +15,7 @@ from toolpolicy.models import (
     ToolInvocation,
     ToolPolicy,
 )
+from toolpolicy.policy_engine import PolicyEngine
 
 __all__ = [
     "AuditEvent",
@@ -26,6 +27,7 @@ __all__ = [
     "PolicyConstraint",
     "PolicyDecision",
     "PolicyDefinition",
+    "PolicyEngine",
     "PolicyOutcome",
     "RiskLevel",
     "ToolInvocation",
