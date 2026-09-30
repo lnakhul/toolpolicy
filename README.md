@@ -243,9 +243,11 @@ provided; unquoted non-JSON values are strings.
 
 ## Audit Events
 
-`PolicyEngine.create_audit_event()` constructs an `AuditEvent` without storing
-or transmitting it. The caller supplies a UUID and timezone-aware timestamp,
-which keeps generation deterministic for identical inputs.
+`PolicyEngine.create_audit_event()` evaluates the invocation with the supplied
+trusted execution context and constructs an `AuditEvent` without storing or
+transmitting it. It does not accept a caller-supplied decision. The caller
+supplies a UUID and timezone-aware timestamp, which keeps generation
+deterministic for identical inputs.
 
 ```python
 from datetime import UTC, datetime
@@ -253,7 +255,7 @@ from uuid import uuid4
 
 audit_event = policy_engine.create_audit_event(
     tool_invocation,
-    policy_decision,
+    execution_context,
     event_id=uuid4(),
     occurred_at=datetime.now(UTC),
 )

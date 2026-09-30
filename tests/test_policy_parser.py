@@ -42,6 +42,67 @@ def test_loads_valid_policy_fixture() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("policy_name", "policy_text", "duplicate_key"),
+    [
+        (
+            "duplicate-tool.yaml",
+            (
+                'version: "1"\n'
+                "tools:\n"
+                "  close_account:\n"
+                "    risk: destructive\n"
+                "    decision: deny\n"
+                "  close_account:\n"
+                "    risk: destructive\n"
+                "    decision: allow\n"
+            ),
+            "close_account",
+        ),
+        (
+            "duplicate-tool-policy-key.yaml",
+            (
+                'version: "1"\n'
+                "tools:\n"
+                "  close_account:\n"
+                "    risk: destructive\n"
+                "    decision: deny\n"
+                "    decision: allow\n"
+            ),
+            "decision",
+        ),
+        (
+            "duplicate-constraint-key.yaml",
+            (
+                'version: "1"\n'
+                "tools:\n"
+                "  transfer_funds:\n"
+                "    risk: consequential\n"
+                "    decision: require_approval\n"
+                "    constraints:\n"
+                "      - source: arguments\n"
+                "        field: amount\n"
+                "        operator: less_than_or_equal\n"
+                "        operator: greater_than\n"
+                "        value: 5000\n"
+                "        on_failure: deny\n"
+            ),
+            "operator",
+        ),
+    ],
+)
+def test_rejects_duplicate_mapping_keys(
+    tmp_path: Path,
+    policy_name: str,
+    policy_text: str,
+    duplicate_key: str,
+) -> None:
+    policy_path = write_policy(tmp_path / policy_name, policy_text)
+
+    with pytest.raises(MalformedPolicyYamlError, match=duplicate_key):
+        load_policy_definition(policy_path)
+
+
 def test_rejects_malformed_yaml(tmp_path: Path) -> None:
     policy_path = write_policy(
         tmp_path / "malformed.yaml",

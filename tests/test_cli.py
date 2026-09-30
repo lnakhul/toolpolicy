@@ -83,3 +83,18 @@ def test_check_maps_unexpected_errors_to_internal_exit_code(
 
     assert result.exit_code == INTERNAL_ERROR_EXIT_CODE
     assert "Internal error" in result.output
+
+
+def test_check_maps_rendering_errors_to_internal_exit_code(
+    monkeypatch,
+) -> None:
+    def raise_rendering_error(*_arguments: object) -> None:
+        raise RuntimeError("unexpected rendering failure")
+
+    monkeypatch.setattr("toolpolicy.cli.render_policy_decision", raise_rendering_error)
+
+    result = invoke_check("--tool", "get_customer")
+
+    assert result.exit_code == INTERNAL_ERROR_EXIT_CODE
+    assert "Internal error" in result.output
+    assert "ALLOW" not in result.output

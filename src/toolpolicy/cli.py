@@ -66,6 +66,8 @@ def check(
             tool_invocation,
             execution_context,
         )
+        render_policy_decision(console, policy_definition, policy_decision)
+        exit_code = _exit_code_for_outcome(policy_decision.outcome)
     except (CliInputError, PolicyLoadError, ValidationError) as error:
         console.print(f"[red]Input error:[/red] {error}")
         raise typer.Exit(INVALID_INPUT_EXIT_CODE) from error
@@ -73,8 +75,7 @@ def check(
         console.print("[red]Internal error:[/red] policy evaluation failed safely.")
         raise typer.Exit(INTERNAL_ERROR_EXIT_CODE) from None
 
-    render_policy_decision(console, policy_definition, policy_decision)
-    raise typer.Exit(_exit_code_for_outcome(policy_decision.outcome))
+    raise typer.Exit(exit_code)
 
 
 def _parse_assignments(assignments: list[str], option_name: str) -> dict[str, object]:

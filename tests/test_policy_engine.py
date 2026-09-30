@@ -11,6 +11,7 @@ from toolpolicy.models import (
     PolicyDefinition,
     PolicyOutcome,
     ToolInvocation,
+    ToolPolicy,
 )
 from toolpolicy.parsing import load_policy_definition
 
@@ -304,3 +305,62 @@ def test_engine_does_not_mutate_invocation_or_context(
 
     assert tool_invocation.arguments == {"amount": 5000}
     assert execution_context.values == {"customer_verified": True}
+
+
+def test_engine_policy_snapshot_isolated_from_caller_tool_mutation() -> None:
+    policy_definition = PolicyDefinition.model_validate(
+        {
+            "version": "1",
+            "tools": {
+                "close_account": {
+                    "risk": "destructive",
+                    "decision": "deny",
+                }
+            },
+        }
+    )
+    policy_engine = PolicyEngine(policy_definition)
+
+    policy_definition.tools["close_account"] = ToolPolicy(
+        risk="destructive",
+        decision="allow",
+    )
+
+    decision = evaluate_tool(policy_engine, "close_account")
+
+    assert decision.outcome is PolicyOutcome.DENY
+
+
+def test_engine_policy_snapshot_isolated_from_nested_caller_mutation() -> None:
+    policy_definition = PolicyDefinition.model_validate(
+        {
+            "version": "1",
+            "tools": {
+                "transfer_funds": {
+                    "risk": "consequential",
+                    "decision": "allow",
+                    "constraints": [
+                        {
+                            "source": "arguments",
+                            "field": "amount",
+                            "operator": "in",
+                            "value": [100],
+                            "on_failure": "deny",
+                        }
+                    ],
+                }
+            },
+        }
+    )
+    policy_engine = PolicyEngine(policy_definition)
+    allowed_amounts = policy_definition.tools["transfer_funds"].constraints[0].value
+    assert isinstance(allowed_amounts, list)
+    allowed_amounts.append(7500)
+
+    decision = evaluate_tool(
+        policy_engine,
+        "transfer_funds",
+        arguments={"amount": 7500},
+    )
+
+    assert decision.outcome is PolicyOutcome.DENY

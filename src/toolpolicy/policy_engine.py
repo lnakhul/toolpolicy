@@ -23,7 +23,7 @@ class PolicyEngine:
     """Evaluate proposed tool invocations against one validated policy definition."""
 
     def __init__(self, policy_definition: PolicyDefinition) -> None:
-        self._policy_definition = policy_definition
+        self._policy_definition = policy_definition.model_copy(deep=True)
 
     def evaluate(
         self,
@@ -65,12 +65,17 @@ class PolicyEngine:
     def create_audit_event(
         self,
         tool_invocation: ToolInvocation,
-        policy_decision: PolicyDecision,
+        execution_context: ExecutionContext,
         *,
         event_id: UUID,
         occurred_at: datetime,
     ) -> AuditEvent:
-        """Create a value-safe audit event for a decision without storing it."""
+        """Evaluate an invocation and create its value-safe audit event.
+
+        The event is not stored by ToolPolicy.
+        """
+
+        policy_decision = self.evaluate(tool_invocation, execution_context)
 
         return AuditEvent(
             event_id=event_id,
