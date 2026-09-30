@@ -2,6 +2,15 @@
 Deterministic runtime authorization for AI-agent actions.
 AI agents shouldn't decide their own permissions. ToolPolicy evaluates proposed tool calls against explicit policies before execution.
 
+## Synthetic Banking Example
+
+[`examples/banking-agent/policy.yaml`](examples/banking-agent/policy.yaml) is
+an entirely fictional banking-agent policy. It demonstrates how a policy can
+allow safe reads, require verified context, require approval for consequential
+actions, impose an argument limit, deny destructive actions, and fail closed
+for unknown tools. The example is policy data only; banking concepts are not
+part of the generic ToolPolicy architecture.
+
 ## CLI demonstration
 
 Use the CLI to test a local policy file:

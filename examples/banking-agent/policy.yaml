@@ -1,3 +1,4 @@
+# Entirely synthetic policy for demonstrating the generic ToolPolicy engine.
 version: "1"
 
 tools:
