@@ -17,12 +17,15 @@ class AuditEvent(DomainModel):
 
     event_id: UUID
     occurred_at: datetime
+    policy_version: NonBlankString
     policy_fingerprint: NonBlankString
     tool_name: NonBlankString
     outcome: PolicyOutcome
     risk: RiskLevel | None = None
     invocation_id: NonBlankString | None = None
+    matched_policy_tool_name: NonBlankString | None = None
     reason_codes: tuple[NonBlankString, ...] = Field(min_length=1)
+    decision_reason: NonBlankString
     constraint_evaluations: tuple[ConstraintEvaluation, ...] = ()
 
     @field_validator("occurred_at")

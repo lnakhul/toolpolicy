@@ -153,11 +153,13 @@ def test_audit_event_serialization_round_trip_excludes_raw_inputs() -> None:
     audit_event = AuditEvent(
         event_id=uuid4(),
         occurred_at=datetime.now(UTC),
+        policy_version="1",
         policy_fingerprint="sha256:policy-fingerprint",
         tool_name="get_account_balance",
         outcome=PolicyOutcome.ALLOW,
         risk=RiskLevel.READ,
         reason_codes=("policy_allow",),
+        decision_reason="The policy allows this tool.",
         constraint_evaluations=(constraint_evaluation,),
     )
 

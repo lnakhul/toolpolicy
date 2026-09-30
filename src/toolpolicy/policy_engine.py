@@ -1,7 +1,13 @@
 """Core deterministic orchestration for declarative tool authorization."""
 
+import hashlib
+import json
+from datetime import datetime
+from uuid import UUID
+
 from toolpolicy.constraints import evaluate_policy_constraint
 from toolpolicy.models import (
+    AuditEvent,
     ConstraintEvaluation,
     ConstraintEvaluationStatus,
     ExecutionContext,
@@ -55,6 +61,69 @@ class PolicyEngine:
             constraint_evaluations=constraint_evaluations,
             policy_version=self._policy_definition.version,
         )
+
+    def create_audit_event(
+        self,
+        tool_invocation: ToolInvocation,
+        policy_decision: PolicyDecision,
+        *,
+        event_id: UUID,
+        occurred_at: datetime,
+    ) -> AuditEvent:
+        """Create a value-safe audit event for a decision without storing it."""
+
+        return AuditEvent(
+            event_id=event_id,
+            occurred_at=occurred_at,
+            policy_version=policy_decision.policy_version,
+            policy_fingerprint=self._policy_fingerprint(),
+            tool_name=policy_decision.tool_name,
+            outcome=policy_decision.outcome,
+            risk=policy_decision.risk,
+            invocation_id=tool_invocation.invocation_id,
+            matched_policy_tool_name=self._matched_policy_tool_name(policy_decision),
+            reason_codes=policy_decision.reason_codes,
+            decision_reason=self._decision_reason(policy_decision.reason_codes),
+            constraint_evaluations=policy_decision.constraint_evaluations,
+        )
+
+    def _policy_fingerprint(self) -> str:
+        policy_json = json.dumps(
+            self._policy_definition.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        return f"sha256:{hashlib.sha256(policy_json.encode()).hexdigest()}"
+
+    def _matched_policy_tool_name(
+        self,
+        policy_decision: PolicyDecision,
+    ) -> str | None:
+        if policy_decision.tool_name in self._policy_definition.tools:
+            return policy_decision.tool_name
+        return None
+
+    @staticmethod
+    def _decision_reason(reason_codes: tuple[str, ...]) -> str:
+        decision_reasons = {
+            "unknown_tool": "No policy exists for the requested tool.",
+            "constraint_evaluation_error": "Constraint evaluation failed safely.",
+            "constraint_failure_deny": "A policy constraint denied the request.",
+            "policy_configured_deny": "The matched policy denies this tool.",
+            "constraint_failure_requires_approval": (
+                "A policy constraint requires approval."
+            ),
+            "policy_configured_allow": "The matched policy allows this tool.",
+            "policy_requires_approval": "The matched policy requires approval.",
+        }
+        try:
+            return " ".join(
+                decision_reasons[reason_code] for reason_code in reason_codes
+            )
+        except KeyError as error:
+            raise ValueError(
+                f"unsupported decision reason code: {error.args[0]}"
+            ) from error
 
     @staticmethod
     def _evaluate_constraint_safely(
