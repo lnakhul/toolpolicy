@@ -349,3 +349,5 @@ revision and checking an invocation expected to be allowed:
 `DENY` and `REQUIRE_APPROVAL` use nonzero exit codes, so select an expected
 `ALLOW` invocation for a simple CI gate or assert the expected exit code in a
 script.
+
+[![M8ven Verified](https://m8ven.ai/badge/mcp/lnakhul-toolpolicy-13cwii?variant=verified&v=51b8456a463a766a784527239952e40c)](https://m8ven.ai/mcp/lnakhul-toolpolicy-13cwii?s=readme)
